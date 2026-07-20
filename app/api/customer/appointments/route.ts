@@ -1,0 +1,2 @@
+import{NextResponse}from"next/server";import{getCustomerSession}from"@/lib/customer-auth";import{prisma}from"@/lib/prisma";
+export async function GET(){const id=await getCustomerSession();if(!id)return NextResponse.json({error:"No autorizado."},{status:401});const customer=await prisma.customer.findUnique({where:{id},include:{appointments:{include:{branch:true,barber:true,service:true,review:true},orderBy:{startAt:"desc"}},orders:{where:{status:"PAID"},select:{total:true}}}});return NextResponse.json(customer)}

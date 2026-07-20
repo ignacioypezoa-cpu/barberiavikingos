@@ -1,0 +1,10 @@
+node_modules
+.npm-cache
+.next
+.env
+.env.local
+*.log
+coverage
+.vercel
+prisma/*.db
+generated

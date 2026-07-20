@@ -1,0 +1,2 @@
+import{PublicShell}from"@/components/PublicShell";import{CustomerReservations}from"@/components/CustomerReservations";
+export default function Page(){return <PublicShell><section className="page-hero"><span className="eyebrow">Área de clientes</span><h1>Mis reservas.</h1><p>Consulta tu historial, puntos y próximas visitas.</p></section><section className="page-content"><CustomerReservations/></section></PublicShell>}

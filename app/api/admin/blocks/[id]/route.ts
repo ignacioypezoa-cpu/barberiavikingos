@@ -1,0 +1,1 @@
+import{NextResponse}from"next/server";import{prisma}from"@/lib/prisma";import{requireAdmin}from"@/lib/admin";export async function DELETE(_:Request,{params}:{params:Promise<{id:string}>}){const a=await requireAdmin(true);if(a.error)return a.error;await prisma.appointmentBlock.delete({where:{id:(await params).id}});return NextResponse.json({ok:true})}

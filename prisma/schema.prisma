@@ -1,0 +1,425 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  BRANCH_MANAGER
+  BARBER
+}
+
+enum AppointmentStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  COMPLETED
+  NO_SHOW
+}
+
+enum OrderStatus {
+  PENDING
+  PAID
+  CANCELLED
+  SHIPPED
+  DELIVERED
+}
+
+enum ProductStatus {
+  ACTIVE
+  INACTIVE
+  OUT_OF_STOCK
+}
+
+enum PaymentStatus {
+  PENDING
+  AUTHORIZED
+  REJECTED
+  REFUNDED
+}
+
+model User {
+  id           String   @id @default(cuid())
+  name         String
+  email        String   @unique
+  passwordHash String
+  role         Role     @default(BARBER)
+  branchId     String?
+  branch       Branch?  @relation(fields: [branchId], references: [id])
+  barber       Barber?
+  active       Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Branch {
+  id           String        @id @default(cuid())
+  name         String
+  slug         String        @unique
+  address      String
+  commune      String
+  city         String
+  phone        String
+  whatsapp     String
+  openingTime  String        @default("09:00")
+  closingTime  String        @default("20:00")
+  mapUrl       String?
+  image        String?
+  active       Boolean       @default(true)
+  users        User[]
+  barbers      Barber[]
+  schedules    Schedule[]
+  appointments Appointment[]
+  orders       Order[]
+  blocks       AppointmentBlock[]
+  waitlist     WaitlistEntry[]
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+}
+
+model Service {
+  id           String          @id @default(cuid())
+  name         String
+  slug         String          @unique
+  description  String
+  category     String          @default("Barbería")
+  duration     Int
+  price        Int
+  image        String?
+  active       Boolean         @default(true)
+  barbers      BarberService[]
+  appointments Appointment[]
+  waitlist     WaitlistEntry[]
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+}
+
+model Barber {
+  id           String          @id @default(cuid())
+  firstName    String
+  lastName     String
+  slug         String          @unique
+  photo        String?
+  specialty    String
+  bio          String
+  phone        String?
+  email        String?
+  branchId     String
+  branch       Branch          @relation(fields: [branchId], references: [id])
+  userId       String?         @unique
+  user         User?           @relation(fields: [userId], references: [id])
+  active       Boolean         @default(true)
+  services     BarberService[]
+  schedules    Schedule[]
+  appointments Appointment[]
+  blocks       AppointmentBlock[]
+  reviews      Review[]
+  waitlist     WaitlistEntry[]
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+}
+
+model BarberService {
+  barberId  String
+  serviceId String
+  barber    Barber  @relation(fields: [barberId], references: [id], onDelete: Cascade)
+  service   Service @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+
+  @@id([barberId, serviceId])
+}
+
+model Schedule {
+  id        String  @id @default(cuid())
+  barberId  String
+  barber    Barber  @relation(fields: [barberId], references: [id], onDelete: Cascade)
+  branchId  String
+  branch    Branch  @relation(fields: [branchId], references: [id])
+  dayOfWeek Int
+  startTime String
+  endTime   String
+  active    Boolean @default(true)
+
+  @@index([barberId, dayOfWeek])
+}
+
+model Customer {
+  id           String        @id @default(cuid())
+  name         String
+  email        String
+  phone        String
+  address      String?
+  commune      String?
+  appointments Appointment[]
+  orders       Order[]
+  carts        Cart[]
+  reviews      Review[]
+  waitlist     WaitlistEntry[]
+  firstVisitAt DateTime?
+  lastVisitAt  DateTime?
+  visitCount   Int           @default(0)
+  totalSpent   Int           @default(0)
+  loyaltyPoints Int          @default(0)
+  favoriteCut  String?
+  favoriteBarber String?
+  favoriteProducts String?
+  preferences  String?
+  accessCodeHash String?
+  accessCodeExpiresAt DateTime?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  @@unique([email, phone])
+}
+
+model Appointment {
+  id         String            @id @default(cuid())
+  code       String            @unique
+  customerId String
+  customer   Customer          @relation(fields: [customerId], references: [id])
+  branchId   String
+  branch     Branch            @relation(fields: [branchId], references: [id])
+  barberId   String
+  barber     Barber            @relation(fields: [barberId], references: [id])
+  serviceId  String
+  service    Service           @relation(fields: [serviceId], references: [id])
+  startAt    DateTime
+  endAt      DateTime
+  status     AppointmentStatus @default(PENDING)
+  notes      String?
+  publicToken String           @unique @default(cuid())
+  reminder24hSentAt DateTime?
+  reminder2hSentAt DateTime?
+  reminder30mSentAt DateTime?
+  reviewRequestedAt DateTime?
+  review      Review?
+  createdAt  DateTime          @default(now())
+  updatedAt  DateTime          @updatedAt
+
+  @@index([barberId, startAt, endAt])
+  @@index([branchId, startAt])
+}
+
+model AppointmentBlock {
+  id        String   @id @default(cuid())
+  branchId  String
+  branch    Branch   @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  barberId  String?
+  barber    Barber?  @relation(fields: [barberId], references: [id], onDelete: Cascade)
+  startAt   DateTime
+  endAt     DateTime
+  reason    String
+  type      String   @default("MANUAL")
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  @@index([branchId, startAt, endAt])
+  @@index([barberId, startAt, endAt])
+}
+
+model WaitlistEntry {
+  id         String   @id @default(cuid())
+  customerId String
+  customer   Customer @relation(fields: [customerId], references: [id])
+  branchId   String
+  branch     Branch   @relation(fields: [branchId], references: [id])
+  serviceId  String
+  service    Service  @relation(fields: [serviceId], references: [id])
+  barberId   String?
+  barber     Barber?  @relation(fields: [barberId], references: [id])
+  desiredAt  DateTime
+  status     String   @default("WAITING")
+  notifiedAt DateTime?
+  createdAt  DateTime @default(now())
+
+  @@index([desiredAt, status])
+}
+
+model Review {
+  id            String      @id @default(cuid())
+  appointmentId String      @unique
+  appointment   Appointment @relation(fields: [appointmentId], references: [id])
+  customerId    String
+  customer      Customer    @relation(fields: [customerId], references: [id])
+  barberId      String
+  barber        Barber      @relation(fields: [barberId], references: [id])
+  rating        Int
+  comment       String?
+  createdAt     DateTime    @default(now())
+}
+
+model LoyaltyTier {
+  id          String   @id @default(cuid())
+  name        String
+  visits      Int
+  points      Int      @default(0)
+  rewardType  String
+  rewardValue Int
+  description String
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model AdvancedConfig {
+  id                    String  @id @default("main")
+  remindersEnabled      Boolean @default(true)
+  reminder24hEnabled    Boolean @default(true)
+  reminder2hEnabled     Boolean @default(true)
+  reminder30mEnabled    Boolean @default(true)
+  rescheduleEnabled     Boolean @default(true)
+  cancelEnabled         Boolean @default(true)
+  minimumChangeHours    Int     @default(2)
+  waitlistEnabled       Boolean @default(true)
+  loyaltyEnabled        Boolean @default(true)
+  pointsPerVisit        Int     @default(10)
+  pointsPerPurchaseRate Int     @default(1000)
+  reviewsEnabled        Boolean @default(true)
+  whatsappEnabled       Boolean @default(false)
+  googleCalendarEnabled Boolean @default(true)
+  updatedAt             DateTime @updatedAt
+}
+
+model ProductCategory {
+  id       String    @id @default(cuid())
+  name     String
+  slug     String    @unique
+  products Product[]
+}
+
+model Product {
+  id          String          @id @default(cuid())
+  name        String
+  slug        String          @unique
+  description String
+  brand       String
+  sku         String          @unique
+  price       Int
+  stock       Int
+  image       String?
+  status      ProductStatus   @default(ACTIVE)
+  categoryId  String
+  category    ProductCategory @relation(fields: [categoryId], references: [id])
+  cartItems   CartItem[]
+  orderItems  OrderItem[]
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+}
+
+model Cart {
+  id         String     @id @default(cuid())
+  customerId String?
+  customer   Customer?  @relation(fields: [customerId], references: [id])
+  sessionId  String?    @unique
+  items      CartItem[]
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+}
+
+model CartItem {
+  id        String  @id @default(cuid())
+  cartId    String
+  cart      Cart    @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product @relation(fields: [productId], references: [id])
+  quantity  Int     @default(1)
+
+  @@unique([cartId, productId])
+}
+
+model ShippingMethod {
+  id          String  @id @default(cuid())
+  name        String
+  description String?
+  price       Int
+  isPickup    Boolean @default(false)
+  active      Boolean @default(true)
+  orders      Order[]
+}
+
+model Order {
+  id               String          @id @default(cuid())
+  code             String          @unique
+  customerId       String
+  customer         Customer        @relation(fields: [customerId], references: [id])
+  branchId         String?
+  branch           Branch?         @relation(fields: [branchId], references: [id])
+  shippingMethodId String
+  shippingMethod   ShippingMethod  @relation(fields: [shippingMethodId], references: [id])
+  status           OrderStatus     @default(PENDING)
+  subtotal         Int
+  tax              Int
+  shipping         Int
+  total            Int
+  shippingAddress  String?
+  items            OrderItem[]
+  payment          Payment?
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+}
+
+model OrderItem {
+  id        String  @id @default(cuid())
+  orderId   String
+  order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product @relation(fields: [productId], references: [id])
+  name      String
+  unitPrice Int
+  quantity  Int
+  total     Int
+}
+
+model Payment {
+  id            String        @id @default(cuid())
+  orderId       String        @unique
+  order         Order         @relation(fields: [orderId], references: [id])
+  provider      String
+  providerRef   String?
+  amount        Int
+  status        PaymentStatus @default(PENDING)
+  metadata      Json?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+}
+
+model BusinessConfig {
+  id          String   @id @default("main")
+  businessName String
+  logo         String?
+  primaryColor String   @default("#c49a5a")
+  rut         String?
+  phone       String?
+  email       String?
+  instagram   String?
+  facebook    String?
+  whatsapp    String?
+  address     String?
+  heroTitle   String   @default("Tu estilo. Nuestro oficio.")
+  heroSubtitle String  @default("Una experiencia de barbería diseñada al detalle.")
+  heroImage   String?
+  generalHours String?
+  taxRate     Int      @default(19)
+  currency    String   @default("CLP")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model EmailConfig {
+  id           String   @id @default("main")
+  smtpHost     String
+  smtpPort     Int      @default(587)
+  smtpUser     String
+  smtpPassword String
+  smtpSecure   Boolean  @default(false)
+  fromEmail    String
+  fromName     String   @default("Vikingos")
+  adminEmail   String
+  enabled      Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
