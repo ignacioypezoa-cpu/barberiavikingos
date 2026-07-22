@@ -3,6 +3,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { canModifyAppointment, isSlotAvailable } from "@/lib/appointments";
 import { sendAppointmentEmails, sendCancellationEmails, sendWaitlistAvailableEmail } from "@/lib/emailService";
+import { chileDateTimeToUtc } from "@/lib/time";
 
 const schema = z.object({
   action: z.enum(["cancel", "reschedule"]),
@@ -47,7 +48,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
 
   if (!config?.rescheduleEnabled) return NextResponse.json({ error: "El reagendamiento online está desactivado." }, { status: 403 });
   if (!parsed.data.date || !parsed.data.time) return NextResponse.json({ error: "Selecciona fecha y hora." }, { status: 400 });
-  const startAt = new Date(`${parsed.data.date}T${parsed.data.time}:00`);
+  const startAt = chileDateTimeToUtc(parsed.data.date, parsed.data.time);
   const endAt = new Date(startAt.getTime() + appointment.service.duration * 60000);
   if (!(await isSlotAvailable(appointment.barberId, appointment.branchId, startAt, endAt, appointment.id))) {
     return NextResponse.json({ error: "Ese horario ya no está disponible.", waitlistAvailable: true }, { status: 409 });

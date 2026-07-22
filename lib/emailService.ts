@@ -1,6 +1,7 @@
 import nodemailer from "nodemailer";
 import { prisma } from "@/lib/prisma";
 import { decryptSecret } from "@/lib/crypto";
+import { formatChileDate, formatChileDateTime, formatChileTime } from "@/lib/time";
 
 export type AppointmentEmailData = {
   code: string;
@@ -58,8 +59,8 @@ function appointmentRows(data: AppointmentEmailData, includeAdminDetails = false
     ["Direccion", data.branchAddress],
     ["Barbero", data.barberName],
     ["Servicio", data.serviceName],
-    ["Fecha", data.startAt.toLocaleDateString("es-CL")],
-    ["Hora", data.startAt.toLocaleTimeString("es-CL", { hour: "2-digit", minute: "2-digit" })],
+    ["Fecha", formatChileDate(data.startAt)],
+    ["Hora", formatChileTime(data.startAt)],
     ["Estado", appointmentStatusLabel[data.status] || data.status]
   ];
 }
@@ -122,12 +123,12 @@ export async function sendTestEmail(recipient?: string) {
     from: { name: mailer.config.fromName, address: mailer.config.fromEmail },
     to,
     subject: "Correo de prueba - Vikingos",
-    html: await emailLayout("Configuracion exitosa", "La conexion SMTP de Vikingos funciona correctamente.", [["Servidor", mailer.config.smtpHost], ["Puerto", String(mailer.config.smtpPort)], ["Fecha", new Date().toLocaleString("es-CL")]], "Ya puedes recibir notificaciones automaticas de reservas.")
+    html: await emailLayout("Configuracion exitosa", "La conexion SMTP de Vikingos funciona correctamente.", [["Servidor", mailer.config.smtpHost], ["Puerto", String(mailer.config.smtpPort)], ["Fecha", formatChileDateTime(new Date())]], "Ya puedes recibir notificaciones automaticas de reservas.")
   });
 }
 
 export async function sendAppointmentAdminEmail(data: AppointmentEmailData) {
-  const rows = [...appointmentRows(data, true), ["Creada", data.createdAt.toLocaleString("es-CL")] as [string, string]];
+  const rows = [...appointmentRows(data, true), ["Creada", formatChileDateTime(data.createdAt)] as [string, string]];
   await sendAppointmentMail(
     (await prisma.emailConfig.findUnique({ where: { id: "main" } }))?.adminEmail || data.customerEmail,
     "Nueva solicitud de reserva - Vikingos",
@@ -238,7 +239,7 @@ export async function sendWaitlistAvailableEmail(email: string, name: string, da
     "Se libero una hora - Vikingos",
     "Hay una hora disponible",
     `Hola ${name}, se libero el horario que estabas esperando.`,
-    [["Servicio", service], ["Fecha", date.toLocaleDateString("es-CL")], ["Hora", date.toLocaleTimeString("es-CL", { hour: "2-digit", minute: "2-digit" })]],
+    [["Servicio", service], ["Fecha", formatChileDate(date)], ["Hora", formatChileTime(date)]],
     "Reserva cuanto antes; el cupo se ofrece a toda la lista de espera.",
     [{ label: "Reservar ahora", url: `${appUrl()}/reservar` }]
   );

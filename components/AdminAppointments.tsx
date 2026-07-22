@@ -1,6 +1,7 @@
 "use client";
 import { useCallback, useEffect, useState } from "react";
 import { Search } from "lucide-react";
+import { formatChileDate, formatChileTime } from "@/lib/time";
 
 const labels: Record<string, string> = { PENDING: "Pendiente", CONFIRMED: "Confirmada", CANCELLED: "Cancelada", COMPLETED: "Atendida", NO_SHOW: "No asistió" };
 export function AdminAppointments() {
@@ -24,7 +25,7 @@ export function AdminAppointments() {
         <select value={filters.status} onChange={(e) => setFilters({...filters,status:e.target.value})}><option value="">Todos los estados</option>{Object.entries(labels).map(([v,l])=><option key={v} value={v}>{l}</option>)}</select>
       </div>
       <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>Fecha / hora</th><th>Cliente</th><th>Sucursal</th><th>Barbero</th><th>Servicio</th><th>Creada</th><th>Estado</th></tr></thead><tbody>
-        {rows.map((r)=><tr key={r.id}><td><strong>{new Date(r.startAt).toLocaleDateString("es-CL")}</strong><br/>{new Date(r.startAt).toLocaleTimeString("es-CL",{hour:"2-digit",minute:"2-digit"})}</td><td><strong>{r.customer.name}</strong><br/><small>{r.customer.phone} · {r.customer.email}</small></td><td>{r.branch.name}</td><td>{r.barber.firstName} {r.barber.lastName}</td><td>{r.service.name}</td><td>{new Date(r.createdAt).toLocaleDateString("es-CL")}</td><td><select className="status-select" value={r.status} onChange={(e)=>status(r.id,e.target.value)}>{Object.entries(labels).map(([v,l])=><option key={v} value={v}>{l}</option>)}</select></td></tr>)}
+        {rows.map((r)=><tr key={r.id}><td><strong>{formatChileDate(new Date(r.startAt))}</strong><br/>{formatChileTime(new Date(r.startAt))}</td><td><strong>{r.customer.name}</strong><br/><small>{r.customer.phone} · {r.customer.email}</small></td><td>{r.branch.name}</td><td>{r.barber.firstName} {r.barber.lastName}</td><td>{r.service.name}</td><td>{formatChileDate(new Date(r.createdAt))}</td><td><select className="status-select" value={r.status} onChange={(e)=>status(r.id,e.target.value)}>{Object.entries(labels).map(([v,l])=><option key={v} value={v}>{l}</option>)}</select></td></tr>)}
       </tbody></table></div>
     </div>
   </>;

@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
 import { sendAppointmentEmails } from "@/lib/emailService";
 import { isSlotAvailable } from "@/lib/appointments";
+import { chileDateRange, chileDateTimeToUtc, chileDayOfWeek, formatChileTime } from "@/lib/time";
 
 const bookingSchema = z.object({
   branchId: z.string().min(1),
@@ -28,7 +29,7 @@ export async function GET(request: NextRequest) {
       ...(params.get("branchId") ? { branchId: params.get("branchId")! } : {}),
       ...(params.get("barberId") ? { barberId: params.get("barberId")! } : {}),
       ...(params.get("status") ? { status: params.get("status") as any } : {}),
-      ...(date ? { startAt: { gte: new Date(`${date}T00:00:00`), lte: new Date(`${date}T23:59:59`) } } : {}),
+      ...(date ? { startAt: { gte: chileDateRange(date).start, lte: chileDateRange(date).end } } : {}),
       ...(q ? { customer: { OR: [{ name: { contains: q, mode: "insensitive" } }, { email: { contains: q, mode: "insensitive" } }, { phone: { contains: q } }] } } : {})
     },
     include: { customer: true, barber: true, service: true, branch: true },
@@ -55,14 +56,14 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "El barbero no realiza este servicio." }, { status: 400 });
   }
 
-  const startAt = new Date(`${data.date}T${data.time}:00`);
+  const startAt = chileDateTimeToUtc(data.date, data.time);
   if (Number.isNaN(startAt.getTime()) || startAt <= new Date()) {
     return NextResponse.json({ error: "Selecciona una fecha futura." }, { status: 400 });
   }
   const endAt = new Date(startAt.getTime() + service.duration * 60000);
-  const dayOfWeek = startAt.getDay();
+  const dayOfWeek = chileDayOfWeek(data.date);
   const schedule = await prisma.schedule.findFirst({
-    where: { barberId: barber.id, dayOfWeek, active: true, startTime: { lte: data.time }, endTime: { gte: endAt.toTimeString().slice(0, 5) } }
+    where: { barberId: barber.id, dayOfWeek, active: true, startTime: { lte: data.time }, endTime: { gte: formatChileTime(endAt) } }
   });
   if (!schedule) return NextResponse.json({ error: "El horario está fuera de la jornada del barbero." }, { status: 409 });
 
