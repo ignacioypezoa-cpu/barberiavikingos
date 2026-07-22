@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
     },
     include: { customer: true, barber: true, service: true, branch: true },
     orderBy: { startAt: "asc" },
-    take: 100
+    take: 500
   });
   return NextResponse.json(appointments);
 }
