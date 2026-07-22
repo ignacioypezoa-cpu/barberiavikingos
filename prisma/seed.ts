@@ -4,7 +4,7 @@ import bcrypt from "bcryptjs";
 const prisma = new PrismaClient();
 
 async function main() {
-  const passwordHash = await bcrypt.hash("Admin123!", 12);
+  const passwordHash = await bcrypt.hash("sherift09", 12);
 
   const branch = await prisma.branch.upsert({
     where: { slug: "providencia" },
@@ -40,12 +40,13 @@ async function main() {
     }
   });
 
+  await prisma.user.deleteMany({ where: { email: "admin@vikingos.cl" } });
   await prisma.user.upsert({
-    where: { email: "admin@vikingos.cl" },
-    update: { passwordHash, name: "Administrador Vikingos" },
+    where: { email: "ignacio.ypezoa@gmail.com" },
+    update: { passwordHash, name: "Ignacio Ypezoa", role: Role.ADMIN, active: true },
     create: {
-      name: "Administrador Vikingos",
-      email: "admin@vikingos.cl",
+      name: "Ignacio Ypezoa",
+      email: "ignacio.ypezoa@gmail.com",
       passwordHash,
       role: Role.ADMIN
     }
@@ -172,7 +173,7 @@ async function main() {
       smtpSecure: false,
       fromEmail: "reservas@vikingos.cl",
       fromName: "Vikingos",
-      adminEmail: "admin@vikingos.cl",
+      adminEmail: "ignacio.ypezoa@gmail.com",
       enabled: false
     }
   });

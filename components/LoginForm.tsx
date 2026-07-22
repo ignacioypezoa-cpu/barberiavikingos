@@ -5,8 +5,8 @@ import { useState } from "react";
 
 export function LoginForm() {
   const router = useRouter();
-  const [email, setEmail] = useState("admin@vikingos.cl");
-  const [password, setPassword] = useState("Admin123!");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -21,7 +21,7 @@ export function LoginForm() {
         body: JSON.stringify({ email, password })
       });
       const data = await response.json();
-      if (!response.ok) throw new Error(data.error || "No fue posible iniciar sesión.");
+      if (!response.ok) throw new Error(data.error || "No fue posible iniciar sesion.");
       router.push("/admin");
       router.refresh();
     } catch (err) {
@@ -33,14 +33,13 @@ export function LoginForm() {
 
   return (
     <form className="login-form" onSubmit={submit}>
-      <span className="eyebrow">Área privada</span>
+      <span className="eyebrow">Area privada</span>
       <h2>Bienvenido.</h2>
       <p>Ingresa tus credenciales para administrar Vikingos.</p>
-      <div className="field"><label>Correo</label><input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required /></div>
-      <div className="field"><label>Contraseña</label><input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required /></div>
+      <div className="field"><label>Correo</label><input type="email" value={email} onChange={(event) => setEmail(event.target.value)} required /></div>
+      <div className="field"><label>Contrasena</label><input type="password" value={password} onChange={(event) => setPassword(event.target.value)} required /></div>
       {error && <p className="error">{error}</p>}
       <button className="button" disabled={loading}>{loading ? "Ingresando..." : "Ingresar al panel"}</button>
-      <div className="demo-credentials">Demo: admin@vikingos.cl · Admin123!</div>
     </form>
   );
 }

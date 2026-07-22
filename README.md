@@ -27,12 +27,11 @@ npm run dev
 
 Abre `http://localhost:3000`.
 
-### Acceso administrador de demostración
+### Acceso administrador inicial
 
-- Correo: `admin@vikingos.cl`
-- Contraseña: `Admin123!`
+- Correo: `ignacio.ypezoa@gmail.com`
 
-Cambia esta contraseña antes de publicar el sistema.
+Crea o actualiza la contraseña desde una semilla segura antes de compartir el sistema.
 
 ## Funciones incluidas
 

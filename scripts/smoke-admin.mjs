@@ -3,7 +3,7 @@ const json = { "Content-Type": "application/json" };
 
 const login = await fetch(`${base}/api/auth/login`, {
   method: "POST", headers: json,
-  body: JSON.stringify({ email: "admin@vikingos.cl", password: "Admin123!" })
+  body: JSON.stringify({ email: "ignacio.ypezoa@gmail.com", password: "sherift09" })
 });
 if (!login.ok) throw new Error(`Login falló: ${login.status}`);
 const cookie = login.headers.getSetCookie()[0].split(";")[0];
