@@ -46,20 +46,6 @@ export default async function Home() {
         </div>
       </section>
 
-      <section className="experience">
-        <div className="experience-image" />
-        <div className="experience-copy">
-          <span className="eyebrow">Más que un corte</span>
-          <h2>Una pausa bien merecida.</h2>
-          <p>En Vikingos creemos que la barbería sigue siendo uno de esos pocos lugares donde el tiempo baja la velocidad. Café de especialidad, buena música y profesionales que conocen tu nombre —y tu corte.</p>
-          <div className="stats">
-            <div><strong>12+</strong><span>Años de oficio</span></div>
-            <div><strong>8k</strong><span>Clientes felices</span></div>
-            <div><strong>4.9</strong><span>Nota promedio</span></div>
-          </div>
-        </div>
-      </section>
-
       <section className="section section-dark" id="barberos">
         <div className="section-head">
           <div>
