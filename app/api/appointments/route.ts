@@ -22,7 +22,11 @@ export async function GET(request: NextRequest) {
   if (!session) return NextResponse.json({ error: "No autorizado." }, { status: 401 });
   const params = request.nextUrl.searchParams;
   const date = params.get("date"); const q = params.get("q");
-  const roleScope = session.role === "ADMIN" ? {} : session.branchId ? { branchId: session.branchId } : { barber: { userId: session.userId } };
+  const roleScope = session.role === "ADMIN" || (session.role === "BRANCH_MANAGER" && !session.branchId)
+    ? {}
+    : session.branchId
+      ? { branchId: session.branchId }
+      : { barber: { userId: session.userId } };
   const appointments = await prisma.appointment.findMany({
     where: {
       ...roleScope,

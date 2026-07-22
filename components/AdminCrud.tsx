@@ -44,9 +44,9 @@ const baseConfigs: Record<string, CrudConfig> = {
     title: "Usuarios", subtitle: "Accesos y roles del equipo administrativo.", endpoint: "/api/admin/users",
     fields: [
       { key: "name", label: "Nombre", required: true }, { key: "email", label: "Correo", type: "email", required: true },
-      { key: "password", label: "Contraseña", type: "password" }, { key: "role", label: "Rol", type: "select", required: true, options: [{ value: "ADMIN", label: "Admin general" }, { value: "BRANCH_MANAGER", label: "Encargado" }, { value: "BARBER", label: "Barbero" }] }
+      { key: "password", label: "Contraseña", type: "password" }, { key: "role", label: "Rol", type: "select", required: true, options: [{ value: "ADMIN", label: "Super admin" }, { value: "BRANCH_MANAGER", label: "Jefe" }, { value: "BARBER", label: "Barbero" }] }
     ],
-    columns: [{ key: "name", label: "Nombre" }, { key: "email", label: "Correo" }, { key: "role", label: "Rol" }, { key: "active", label: "Estado", render: (r) => r.active ? "Activo" : "Inactivo" }]
+    columns: [{ key: "name", label: "Nombre" }, { key: "email", label: "Correo" }, { key: "role", label: "Rol" }, { key: "branch", label: "Sucursal", render: (r) => r.branch?.name || "—" }, { key: "barberId", label: "Barbero", render: (r) => r.barber?.firstName ? `${r.barber.firstName} ${r.barber.lastName}` : "—" }, { key: "active", label: "Estado", render: (r) => r.active ? "Activo" : "Inactivo" }]
   },
   fidelizacion: {
     title: "Fidelización", subtitle: "Beneficios configurables por visitas y puntos.", endpoint: "/api/admin/loyalty",
@@ -89,6 +89,22 @@ export function AdminCrud({ section }: { section: string }) {
           { key: "photo", label: "Foto", type: "image" }
         ],
         columns: [{ key: "firstName", label: "Nombre", render: (r) => `${r.firstName} ${r.lastName}` }, { key: "specialty", label: "Especialidad" }, { key: "branch", label: "Sucursal", render: (r) => r.branch?.name }, { key: "serviceNames", label: "Servicios" }, { key: "active", label: "Estado", render: (r) => r.active ? "Activo" : "Inactivo" }]
+      });
+    });
+  }, [section]);
+  useEffect(() => {
+    if (section !== "usuarios") return;
+    Promise.all([fetch("/api/admin/branches").then((r) => r.json()), fetch("/api/admin/barbers").then((r) => r.json())]).then(([branches, barbers]) => {
+      setConfig({
+        title: "Usuarios", subtitle: "Perfiles de acceso: super admin, jefe y barbero.", endpoint: "/api/admin/users",
+        fields: [
+          { key: "name", label: "Nombre", required: true }, { key: "email", label: "Correo", type: "email", required: true },
+          { key: "password", label: "Contraseña", type: "password" },
+          { key: "role", label: "Rol", type: "select", required: true, options: [{ value: "ADMIN", label: "Super admin" }, { value: "BRANCH_MANAGER", label: "Jefe" }, { value: "BARBER", label: "Barbero" }] },
+          { key: "branchId", label: "Sucursal del jefe", type: "select", options: branches.map((b: Row) => ({ value: b.id, label: b.name })) },
+          { key: "barberId", label: "Ficha de barbero", type: "select", options: barbers.map((b: Row) => ({ value: b.id, label: `${b.firstName} ${b.lastName}` })) }
+        ],
+        columns: [{ key: "name", label: "Nombre" }, { key: "email", label: "Correo" }, { key: "role", label: "Rol" }, { key: "branch", label: "Sucursal", render: (r) => r.branch?.name || "—" }, { key: "barberId", label: "Barbero", render: (r) => r.barber?.firstName ? `${r.barber.firstName} ${r.barber.lastName}` : "—" }, { key: "active", label: "Estado", render: (r) => r.active ? "Activo" : "Inactivo" }]
       });
     });
   }, [section]);

@@ -11,7 +11,7 @@ const schema = z.object({
 });
 
 export async function GET() {
-  const auth = await requireAdmin(true); if (auth.error) return auth.error;
+  const auth = await requireAdmin(true, true); if (auth.error) return auth.error;
   return NextResponse.json(await prisma.branch.findMany({ orderBy: { createdAt: "desc" } }));
 }
 export async function POST(request: NextRequest) {

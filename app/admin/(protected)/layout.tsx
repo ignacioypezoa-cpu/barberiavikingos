@@ -7,7 +7,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   if (!session) redirect("/admin/login");
   return (
     <div className="admin-shell">
-      <AdminSidebar />
+      <AdminSidebar role={session.role} />
       <main className="admin-main">{children}</main>
     </div>
   );

@@ -15,7 +15,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   try { return NextResponse.json(await prisma.branch.update({ where: { id: (await params).id }, data: parsed.data })); } catch (error) { return apiError(error); }
 }
 export async function DELETE(_: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const auth = await requireAdmin(); if (auth.error) return auth.error;
+  const auth = await requireAdmin(true); if (auth.error) return auth.error;
   try {
     const id = (await params).id;
     const relations = await prisma.appointment.count({ where: { branchId: id } });

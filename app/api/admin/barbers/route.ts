@@ -11,7 +11,7 @@ const schema = z.object({
 });
 
 export async function GET() {
-  const auth = await requireAdmin(true); if (auth.error) return auth.error;
+  const auth = await requireAdmin(true, true); if (auth.error) return auth.error;
   const rows = await prisma.barber.findMany({ include: { branch: true, services: { include: { service: true } }, schedules: true }, orderBy: { createdAt: "desc" } });
   return NextResponse.json(rows.map((b) => ({ ...b, serviceIds: b.services.map((s) => s.serviceId), serviceNames: b.services.map((s) => s.service.name).join(", "), startTime: b.schedules[0]?.startTime || "09:00", endTime: b.schedules[0]?.endTime || "20:00" })));
 }

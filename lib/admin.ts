@@ -6,12 +6,14 @@ export function slugify(value: string) {
     .replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 }
 
-export async function requireAdmin(allowManager = false) {
+export async function requireAdmin(allowManager = false, allowBarber = false) {
   const session = await getSession();
   if (!session) return { error: NextResponse.json({ error: "No autorizado." }, { status: 401 }) };
-  if (session.role !== "ADMIN" && !(allowManager && session.role === "BRANCH_MANAGER")) {
-    return { error: NextResponse.json({ error: "No tienes permisos para esta acción." }, { status: 403 }) };
-  }
+  const allowed =
+    session.role === "ADMIN" ||
+    (allowManager && session.role === "BRANCH_MANAGER") ||
+    (allowBarber && session.role === "BARBER");
+  if (!allowed) return { error: NextResponse.json({ error: "No tienes permisos para esta accion." }, { status: 403 }) };
   return { session };
 }
 
@@ -19,6 +21,6 @@ export function apiError(error: unknown) {
   console.error(error);
   const message = error instanceof Error && error.message.includes("Unique constraint")
     ? "Ya existe un registro con esos datos."
-    : "No fue posible completar la operación.";
+    : "No fue posible completar la operacion.";
   return NextResponse.json({ error: message }, { status: 500 });
 }

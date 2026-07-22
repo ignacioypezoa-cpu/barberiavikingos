@@ -15,7 +15,10 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   const { id } = await params;
   const existing = await prisma.appointment.findUnique({ where: { id }, include: { barber: true } });
   if (!existing) return NextResponse.json({ error: "Reserva no encontrada." }, { status: 404 });
-  const permitted = session.role === "ADMIN" || existing.branchId === session.branchId || existing.barber.userId === session.userId;
+  const permitted =
+    session.role === "ADMIN" ||
+    (session.role === "BRANCH_MANAGER" && (!session.branchId || existing.branchId === session.branchId)) ||
+    existing.barber.userId === session.userId;
   if (!permitted) return NextResponse.json({ error: "Sin permisos." }, { status: 403 });
   const updated = await prisma.appointment.update({
     where: { id }, data: parsed.data,

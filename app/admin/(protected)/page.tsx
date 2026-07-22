@@ -1,4 +1,5 @@
 import { CalendarCheck, CircleDollarSign, Scissors, Store } from "lucide-react";
+import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { clp } from "@/lib/data";
@@ -6,6 +7,7 @@ import { formatChileTime } from "@/lib/time";
 
 export default async function AdminDashboard() {
   const session = await getSession();
+  if (session?.role === "BARBER") redirect("/admin/reservas");
   const start=new Date();start.setHours(0,0,0,0);const end=new Date();end.setHours(23,59,59,999);
   const weekStart=new Date(start);weekStart.setDate(start.getDate()-start.getDay());const monthStart=new Date(start.getFullYear(),start.getMonth(),1);
   const [todayCount,weekCount,monthCount,pendingCount,cancelledCount,noShowCount,sales,barberCount,branchCount,upcoming,lowStock,newCustomers,recurringCustomers,barbers,topProducts]=await Promise.all([
