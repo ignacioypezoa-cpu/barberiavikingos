@@ -18,6 +18,14 @@ function sameDay(a: Date, b: Date) {
   return a.toDateString() === b.toDateString();
 }
 
+function overlapsDay(startAt: string, endAt: string, day: Date) {
+  const dayStart = new Date(day);
+  dayStart.setHours(0, 0, 0, 0);
+  const dayEnd = new Date(day);
+  dayEnd.setHours(23, 59, 59, 999);
+  return new Date(startAt) <= dayEnd && new Date(endAt) >= dayStart;
+}
+
 function monthTitle(date: Date, view: string) {
   if (view === "day") return date.toLocaleDateString("es-CL", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
   if (view === "week") return `Semana del ${date.toLocaleDateString("es-CL", { day: "numeric", month: "long", year: "numeric" })}`;
@@ -140,7 +148,7 @@ export function AdminCalendar() {
     <div className={`calendar-grid view-${view}`}>
       {days.map((day) => {
         const dayAppointments = visibleAppointments.filter((appointment) => sameDay(new Date(appointment.startAt), day));
-        const dayBlocks = visibleBlocks.filter((block) => sameDay(new Date(block.startAt), day));
+        const dayBlocks = visibleBlocks.filter((block) => overlapsDay(block.startAt, block.endAt, day));
         return <div className={`calendar-day ${day.getMonth() !== date.getMonth() && view === "month" ? "muted" : ""}`} key={day.toISOString()} onDragOver={(event) => event.preventDefault()} onDrop={(event) => drop(event, day)}>
           <span className="day-number">{day.getDate()}</span>
           <div className="calendar-day-items">
@@ -148,8 +156,8 @@ export function AdminCalendar() {
               <strong>{formatChileTime(new Date(appointment.startAt))} {appointment.customer.name}</strong>
               <span>{appointment.service.name} - {appointment.barber.firstName}</span>
             </div>)}
-            {dayBlocks.map((block) => <div className="calendar-block" key={block.id}>
-              <span>{block.reason}</span>
+            {dayBlocks.map((block) => <div className="calendar-block" key={`${block.id}-${day.toISOString()}`}>
+              <span>{block.reason}{block.barber ? ` - ${block.barber.firstName}` : ""}</span>
               <button onClick={() => del(block.id)}><Trash2 size={12} /></button>
             </div>)}
           </div>

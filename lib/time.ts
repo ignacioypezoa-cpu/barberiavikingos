@@ -32,6 +32,11 @@ export function chileDateTimeToUtc(date: string, time: string) {
   return new Date(firstGuess.getTime() + desired - actualWallTime);
 }
 
+export function chileDateTimeLocalToUtc(value: string) {
+  const [date, time = "00:00"] = value.split("T");
+  return chileDateTimeToUtc(date, time.slice(0, 5));
+}
+
 export function chileDateRange(date: string) {
   return {
     start: chileDateTimeToUtc(date, "00:00"),
